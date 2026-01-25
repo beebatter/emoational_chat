@@ -72,7 +72,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # 创建非root用户
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -r -g appuser appuserDocker 在挂载不存在的路径时，会自动创建目录而不是文件
 
 # 设置工作目录
 WORKDIR /app
