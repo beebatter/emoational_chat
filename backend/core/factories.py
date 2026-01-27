@@ -24,6 +24,7 @@ from .interfaces import (
     IValidationService
 )
 from .exceptions import ConfigurationError
+from backend.modules.rag import RAGService
 
 T = TypeVar('T')
 
@@ -107,11 +108,7 @@ class RAGServiceFactory(ServiceFactory):
     
     def create_service(self, *args, **kwargs) -> IRAGService:
         """创建RAG服务实例"""
-        try:
-            from ..services.rag_service import RAGService
-            return RAGService(*args, **kwargs)
-        except ImportError as e:
-            raise ConfigurationError(f"无法导入RAG服务: {e}")
+        return RAGService(*args, **kwargs)
     
     def get_service_type(self) -> Type[IRAGService]:
         return IRAGService
@@ -138,12 +135,18 @@ class CacheServiceFactory(ServiceFactory):
     def create_service(self, *args, **kwargs) -> ICacheService:
         """创建缓存服务实例"""
         try:
-            from ..cache_service import CacheService
+            from ..cache_service import CacheService  # type: ignore
             return CacheService(*args, **kwargs)
-        except ImportError as e:
-            # 如果没有Redis缓存，返回内存缓存
-            from .utils.memory_cache import MemoryCacheService
-            return MemoryCacheService(*args, **kwargs)
+        except ImportError:
+            # 如果没有Redis缓存，尝试使用内存缓存
+            try:
+                from .utils.memory_cache import MemoryCacheService  # type: ignore
+                return MemoryCacheService(*args, **kwargs)
+            except ImportError:
+                raise ConfigurationError(
+                    "无法导入缓存服务: CacheService 和 MemoryCacheService 都不可用。"
+                    "请确保 cache_service.py 或 core/utils/memory_cache.py 存在。"
+                )
     
     def get_service_type(self) -> Type[ICacheService]:
         return ICacheService
@@ -170,11 +173,18 @@ class ValidationServiceFactory(ServiceFactory):
     def create_service(self, *args, **kwargs) -> IValidationService:
         """创建验证服务实例"""
         try:
-            from ..validation_service import ValidationService
+            from ..validation_service import ValidationService  # type: ignore
             return ValidationService(*args, **kwargs)
-        except ImportError as e:
-            from .utils.simple_validator import SimpleValidationService
-            return SimpleValidationService(*args, **kwargs)
+        except ImportError:
+            # 如果主要验证服务不可用，尝试使用简单验证器
+            try:
+                from .utils.simple_validator import SimpleValidationService  # type: ignore
+                return SimpleValidationService(*args, **kwargs)
+            except ImportError:
+                raise ConfigurationError(
+                    "无法导入验证服务: ValidationService 和 SimpleValidationService 都不可用。"
+                    "请确保 validation_service.py 或 core/utils/simple_validator.py 存在。"
+                )
     
     def get_service_type(self) -> Type[IValidationService]:
         return IValidationService

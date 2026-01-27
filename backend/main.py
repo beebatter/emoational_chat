@@ -53,7 +53,7 @@ from backend.models import (
     MultimodalRequest, MultimodalResponse
 )
 from backend.multimodal_services import voice_recognition, voice_synthesis, image_analysis, multimodal_fusion
-from backend.database import get_db
+from backend.database import get_db, DatabaseManager, ChatMessage, ResponseEvaluation
 from backend.evaluation_engine import EvaluationEngine
 
 # 创建FastAPI应用
@@ -485,7 +485,6 @@ async def get_session_summary(session_id: str):
 async def get_session_history(session_id: str, limit: int = 20):
     """获取会话历史"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             messages = db.get_session_messages(session_id, limit)
             
@@ -515,7 +514,6 @@ async def get_session_history(session_id: str, limit: int = 20):
 async def get_user_sessions(user_id: str, limit: int = 50):
     """获取用户的所有会话列表"""
     try:
-        from backend.database import DatabaseManager, ChatMessage
         with DatabaseManager() as db:
             sessions = db.get_user_sessions(user_id, limit)
             
@@ -549,7 +547,6 @@ async def get_user_sessions(user_id: str, limit: int = 50):
 async def delete_session(session_id: str):
     """删除会话"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             success = db.delete_session(session_id)
             
@@ -580,7 +577,6 @@ async def get_user_emotion_trends(user_id: str):
 async def submit_feedback(request: FeedbackRequest):
     """提交用户反馈"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             feedback = db.save_feedback(
                 session_id=request.session_id,
@@ -608,7 +604,6 @@ async def submit_feedback(request: FeedbackRequest):
 async def get_feedback_statistics():
     """获取反馈统计信息"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             stats = db.get_feedback_statistics()
             return FeedbackStatistics(**stats)
@@ -620,7 +615,6 @@ async def get_feedback_statistics():
 async def get_feedback_list(feedback_type: str = None, limit: int = 100):
     """获取反馈列表"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             feedbacks = db.get_all_feedback(feedback_type=feedback_type, limit=limit)
             
@@ -653,7 +647,6 @@ async def get_feedback_list(feedback_type: str = None, limit: int = 100):
 async def get_session_feedback(session_id: str):
     """获取特定会话的反馈"""
     try:
-        from backend.database import DatabaseManager
         with DatabaseManager() as db:
             feedbacks = db.get_feedback_by_session(session_id)
             

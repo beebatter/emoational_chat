@@ -139,8 +139,6 @@ async def get_session_summary(session_id: str):
         if "error" in summary:
             raise HTTPException(status_code=404, detail=summary["error"])
         return summary
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"获取会话摘要错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -159,8 +157,6 @@ async def get_session_history(session_id: str, limit: int = 20):
                 "messages": []
             }
         return history
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"获取会话历史错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -197,8 +193,6 @@ async def delete_sessions_batch(session_ids: List[str]):
         
         result = await chat_service.delete_sessions_batch(session_ids)
         return result
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"批量删除会话错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -217,8 +211,6 @@ async def delete_session(session_id: str):
             "message": "会话删除成功",
             "session_id": session_id
         }
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"删除会话错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -232,8 +224,6 @@ async def get_user_emotion_trends(user_id: str):
         if "error" in trends:
             raise HTTPException(status_code=404, detail=trends["error"])
         return trends
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"获取情感趋势错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -319,8 +309,6 @@ async def chat_with_attachments(
         response = await chat_service.chat(chat_request, use_memory_system=True)
         
         return response
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"带附件聊天接口错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -336,9 +324,6 @@ async def parse_url(data: dict):
         
         result = parse_url_content(url)
         return result
-        
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"URL解析接口错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))

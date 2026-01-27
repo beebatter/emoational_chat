@@ -27,8 +27,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """处理请求并捕获错误"""
         try:
-            response = await call_next(request)
-            return response
+            return await call_next(request)
         
         except EmotionalChatException as e:
             # 处理自定义异常
