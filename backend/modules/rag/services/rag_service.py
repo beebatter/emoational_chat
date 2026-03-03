@@ -210,15 +210,34 @@ class RAGService:
                 from langchain.retrievers.document_compressors import CrossEncoderReranker
                 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
                 
-                # 获取基础检索器（Top 20）
-                base_retriever = self.kb_manager.vectorstore.as_retriever(search_kwargs={"k": 20})
+                # 通过配置控制是否启用 Reranker 以及模型名称
+                reranker_enabled = getattr(Config, "ENABLE_RERANKER", True)
+                if not reranker_enabled:
+                    raise RuntimeError("Reranker disabled by configuration")
+                reranker_model_name = getattr(
+                    Config, "RERANKER_MODEL", "BAAI/bge-reranker-base"
+                )
                 
-                # 初始化轻量级重排器
-                model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
-                compressor = CrossEncoderReranker(model=model, top_n=search_k)
+                # 懒加载并缓存 HuggingFaceCrossEncoder 模型（实例级缓存）
+                if not hasattr(self, "_reranker_model") or self._reranker_model is None:
+                    logger.info(f"初始化 Reranker 模型: {reranker_model_name}")
+                    self._reranker_model = HuggingFaceCrossEncoder(
+                        model_name=reranker_model_name
+                    )
+                
+                # 获取基础检索器（Top 20）
+                base_retriever = self.kb_manager.vectorstore.as_retriever(
+                    search_kwargs={"k": 20}
+                )
+                
+                # 使用缓存的模型构建轻量级重排器（根据当前 search_k 调整 top_n）
+                compressor = CrossEncoderReranker(
+                    model=self._reranker_model,
+                    top_n=search_k,
+                )
                 compression_retriever = ContextualCompressionRetriever(
-                    base_compressor=compressor, 
-                    base_retriever=base_retriever
+                    base_compressor=compressor,
+                    base_retriever=base_retriever,
                 )
                 
                 knowledge_docs = compression_retriever.invoke(question)
